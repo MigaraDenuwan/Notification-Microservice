@@ -1,37 +1,43 @@
 package com.sliit.Notification_Service.service;
 
-import com.twilio.Twilio;
-import com.twilio.rest.api.v2010.account.Message;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import jakarta.annotation.PostConstruct;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.*;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class SmsService {
 
-    @Value("${twilio.account.sid}")
-    private String accountSid;
+    @Value("${textlk.api.token}")
+    private String apiToken;
 
-    @Value("${twilio.auth.token}")
-    private String authToken;
+    @Value("${textlk.sender.id}")
+    private String senderId;
 
-    @Value("${twilio.phone.number}")
-    private String fromPhoneNumber;
+    private final RestTemplate restTemplate = new RestTemplate();
 
-    @PostConstruct
-    public void init() {
-        Twilio.init(accountSid, authToken);
-    }
+    private static final String TEXT_LK_SMS_API_URL = "https://app.text.lk/api/http/";
 
     public String sendSms(String toPhoneNumber, String messageText) {
-        Message message = Message.creator(
-                new com.twilio.type.PhoneNumber(toPhoneNumber),
-                new com.twilio.type.PhoneNumber(fromPhoneNumber),
-                messageText
-        ).create();
+        // Set headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        return message.getSid();
+        // Create request body
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("token", apiToken);  // API Token
+        requestBody.put("from", senderId);   // Sender ID
+        requestBody.put("to", toPhoneNumber);  // Receiver phone number
+        requestBody.put("message", messageText);  // Message content
+
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        // Send POST request
+        ResponseEntity<String> response = restTemplate.postForEntity(TEXT_LK_SMS_API_URL, requestEntity, String.class);
+
+        return response.getBody(); // Response from Text.lk API
     }
 
     // Custom methods for order status notifications
