@@ -18,7 +18,6 @@ public class EmailController {
         this.mailSender = mailSender;
     }
 
-    // OTP Email
     @GetMapping("/send-otp")
     public String sendOtpEmail(@RequestParam String toEmail) {
         try {
