@@ -18,29 +18,29 @@ public class SmsService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    private static final String TEXT_LK_SMS_API_URL = "https://app.text.lk/api/http/";
+    private static final String TEXT_LK_SMS_API_URL = "https://app.text.lk/api/v3/sms/send";
 
     public String sendSms(String toPhoneNumber, String messageText) {
         // Set headers
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(java.util.Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.setBearerAuth(apiToken); // Use Bearer Token Authentication
 
         // Create request body
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("token", apiToken);  // API Token
-        requestBody.put("from", senderId);   // Sender ID
-        requestBody.put("to", toPhoneNumber);  // Receiver phone number
-        requestBody.put("message", messageText);  // Message content
+        requestBody.put("recipient", toPhoneNumber);   // New field name
+        requestBody.put("sender_id", "TextLKDemo");        // New field name
+        requestBody.put("type", "plain");              // Always "plain" for normal SMS
+        requestBody.put("message", messageText);       // Message content
 
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
 
-        // Send POST request
         ResponseEntity<String> response = restTemplate.postForEntity(TEXT_LK_SMS_API_URL, requestEntity, String.class);
 
-        return response.getBody(); // Response from Text.lk API
+        return response.getBody();
     }
 
-    // Custom methods for order status notifications
     public String sendOrderDeliveredNotification(String toPhoneNumber) {
         String messageText = "Your order has been delivered successfully! Enjoy your meal!";
         return sendSms(toPhoneNumber, messageText);
